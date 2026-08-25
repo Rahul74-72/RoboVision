@@ -33,3 +33,15 @@ def test_stable_track_name_keeps_vote_based_recognition():
     assert "Counter" in source
     assert "MIN_VOTES" in source
     assert '"Unknown"' in source
+
+
+def test_greeting_for_keeps_role_and_name_in_message():
+    functions = load_functions()
+    source = ast.unparse(functions["greeting_for"])
+
+    assert "role" in source
+    assert "name" in source
+    assert "Good morning" in source
+    assert "Good afternoon" in source
+    assert "Good evening" in source
+    assert '"Hello"' in source
