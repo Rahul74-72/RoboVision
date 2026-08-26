@@ -250,15 +250,6 @@ def greeting_for(name, role):
     )
 
 
-def greeting_for(name, role):
-    hour = datetime.datetime.now().hour
-    if 5 <= hour < 12: time_word = "Good morning"
-    elif 12 <= hour < 17: time_word = "Good afternoon"
-    elif 17 <= hour < 21: time_word = "Good evening"
-    else: time_word = "Hello"
-    return f"{time_word}, {role} {name}" if role and role != "Unknown" else f"{time_word}, {name}"
-
-
 def speak(text):
     # Unique file per greeting prevents Windows file-lock conflicts.
     filename = os.path.abspath(
