@@ -45,3 +45,14 @@ def test_greeting_for_keeps_role_and_name_in_message():
     assert "Good afternoon" in source
     assert "Good evening" in source
     assert '"Hello"' in source
+
+
+def test_geometry_features_guards_against_degenerate_face_scale():
+    functions = load_functions()
+    source = ast.unparse(functions["geometry_features"])
+
+    assert "fw" in source
+    assert "ed" in source
+    assert "fh" in source
+    assert "min(fw, ed, fh)" in source
+    assert "return None" in source
