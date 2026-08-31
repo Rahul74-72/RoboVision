@@ -62,7 +62,6 @@ roles = data.get("roles", {})
 EMBEDDING_WEIGHT = float(data.get("embedding_weight", EMBEDDING_WEIGHT))
 GEOMETRY_WEIGHT = float(data.get("geometry_weight", GEOMETRY_WEIGHT))
 
-# FaceNet pretrained model.
 facenet = InceptionResnetV1(
     pretrained="vggface2"
 ).eval().to(DEVICE)
@@ -194,7 +193,15 @@ def recognize(embedding, geometry):
     embedding_scores = prototype_vectors @ embedding
 
     if geometry is not None and len(geometry_mean):
-        z = l2((geometry - geometry_mean) / geometry_std)
+        valid_std = np.abs(geometry_std) > 1e-6
+        z = np.zeros_like(geometry, dtype=np.float32)
+        np.divide(
+            geometry - geometry_mean,
+            geometry_std,
+            out=z,
+            where=valid_std,
+        )
+        z = l2(z)
         geometry_scores = geometry_vectors @ z
     else:
         geometry_scores = np.zeros(
@@ -251,7 +258,6 @@ def greeting_for(name, role):
 
 
 def speak(text):
-    # Unique file per greeting prevents Windows file-lock conflicts.
     filename = os.path.abspath(
         f"robot_greeting_{uuid.uuid4().hex}.mp3"
     )
@@ -277,7 +283,6 @@ def speak(text):
         except Exception:
             pass
 
-        # Windows may keep the MP3 locked for a short time.
         for _ in range(15):
             try:
                 if os.path.exists(filename):
@@ -304,10 +309,6 @@ pygame.mixer.init()
 tts_thread = threading.Thread(target=tts_worker, daemon=True)
 tts_thread.start()
 
-
-# ============================================================
-# PER-FACE TRACKING + GREETING
-# ============================================================
 
 face_tracks = {}
 next_track_id = 0
@@ -431,7 +432,6 @@ while True:
 
     detections=[]
 
-    # Detect every face.
     if results.multi_face_landmarks:
         for fl in results.multi_face_landmarks:
             lm=fl.landmark
@@ -453,7 +453,6 @@ while True:
     active=set()
     current=[]
 
-    # Each face gets its OWN track and OWN FaceNet embedding.
     for det in detections:
         box=det["box"]
         landmarks=det["landmarks"]
@@ -479,7 +478,6 @@ while True:
                 name="Unknown"
                 combined=emb_score=geo_score=0.0
 
-        # Vote ONLY inside this face's track.
         track["votes"].append(name)
 
         stable=stable_track_name(track)
