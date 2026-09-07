@@ -7,6 +7,9 @@ def normalize_geometry(geometry, mean, std):
     mean = np.asarray(mean, dtype=np.float32)
     std = np.asarray(std, dtype=np.float32)
 
+    if geometry.shape != mean.shape or geometry.shape != std.shape:
+        raise ValueError("geometry, mean, and std must have the same shape")
+
     valid_std = np.abs(std) > 1e-6
     z = np.zeros_like(geometry, dtype=np.float32)
     np.divide(
