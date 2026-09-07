@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from geometry_utils import normalize_geometry
 
@@ -23,3 +24,12 @@ def test_normalize_geometry_returns_zero_for_no_valid_variance():
     )
 
     assert np.array_equal(result, np.zeros(2, dtype=np.float32))
+
+
+def test_normalize_geometry_rejects_mismatched_shapes():
+    with pytest.raises(ValueError, match="same shape"):
+        normalize_geometry(
+            np.array([2.0, 4.0], dtype=np.float32),
+            np.array([1.0], dtype=np.float32),
+            np.array([1.0, 2.0], dtype=np.float32),
+        )
