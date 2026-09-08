@@ -11,7 +11,6 @@ import os
 import torch
 from collections import deque, Counter
 from facenet_pytorch import InceptionResnetV1
-from geometry_utils import normalize_geometry
 
 from gtts import gTTS
 import pygame
@@ -194,11 +193,15 @@ def recognize(embedding, geometry):
     embedding_scores = prototype_vectors @ embedding
 
     if geometry is not None and len(geometry_mean):
-        z = normalize_geometry(
-            geometry,
-            geometry_mean,
+        valid_std = np.abs(geometry_std) > 1e-6
+        z = np.zeros_like(geometry, dtype=np.float32)
+        np.divide(
+            geometry - geometry_mean,
             geometry_std,
+            out=z,
+            where=valid_std,
         )
+        z = l2(z)
         geometry_scores = geometry_vectors @ z
     else:
         geometry_scores = np.zeros(
@@ -504,41 +507,72 @@ while True:
         x1,y1,x2,y2=box
         color=(0,255,0) if display_name!="Unknown" else (0,0,255)
 
-        cv2.rectangle(
-            frame,
-            (x1,y1),
-            (x2,y2),
-            color,
-            2
-        )
+        cv2.rectangle(frame,(x1,y1),(x2,y2),color,2)
 
-        label=(
-            f"Face {tid}: {display_name} "
-            f"{combined:.2f}"
+        cv2.putText(
+            frame,
+            f"Face {tid}",
+            (x1,max(48,y1-8)),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            .45,
+            color,
+            1
         )
 
         cv2.putText(
             frame,
-            label,
-            (x1,max(25,y1-10)),
+            f"C:{combined:.2f} E:{emb_score:.2f} G:{geo_score:.2f}",
+            (x1,min(frame.shape[0]-8,y2+18)),
             cv2.FONT_HERSHEY_SIMPLEX,
-            0.6,
+            .42,
             color,
-            2
+            1
         )
 
     cleanup_tracks(active)
 
-    cv2.imshow("RoboVision",frame)
+    names=list(dict.fromkeys(
+        x["name"] for x in current
+        if x["name"]!="Unknown"
+    ))
 
-    if cv2.waitKey(1) & 0xFF == ord("q"):
+    if names:
+        summary="People: "+", ".join(names)
+    elif current:
+        summary="People: Unknown"
+    else:
+        summary="People: None"
+
+    cv2.putText(
+        frame,summary,(10,30),
+        cv2.FONT_HERSHEY_SIMPLEX,.60,(255,255,0),2
+    )
+
+    cv2.putText(
+        frame,f"Faces detected: {len(current)}",
+        (10,58),cv2.FONT_HERSHEY_SIMPLEX,.52,(255,255,0),2
+    )
+
+    cv2.putText(
+        frame,f"TTS queue: {tts_queue.qsize()}",
+        (10,84),cv2.FONT_HERSHEY_SIMPLEX,.50,(255,255,0),2
+    )
+
+    cv2.imshow(
+        "Robot Dog - FaceNet Multi-Face AI",
+        frame
+    )
+
+    if cv2.waitKey(1)&0xFF==ord("q"):
         break
+
 
 cap.release()
 face_mesh.close()
-cv2.destroyAllWindows()
-
 try:
-    tts_queue.put(None)
-except Exception:
+    tts_queue.put_nowait(None)
+except queue.Full:
     pass
+tts_thread.join(timeout=1.0)
+pygame.mixer.quit()
+cv2.destroyAllWindows()
