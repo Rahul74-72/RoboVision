@@ -33,3 +33,12 @@ def test_normalize_geometry_rejects_mismatched_shapes():
             np.array([1.0], dtype=np.float32),
             np.array([1.0, 2.0], dtype=np.float32),
         )
+
+
+def test_normalize_geometry_rejects_non_finite_values():
+    with pytest.raises(ValueError, match="finite"):
+        normalize_geometry(
+            np.array([2.0, np.nan], dtype=np.float32),
+            np.array([1.0, 3.0], dtype=np.float32),
+            np.array([1.0, 2.0], dtype=np.float32),
+        )
