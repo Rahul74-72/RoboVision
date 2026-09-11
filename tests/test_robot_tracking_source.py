@@ -56,3 +56,31 @@ def test_geometry_features_guards_against_degenerate_face_scale():
     assert "fh" in source
     assert "min(fw, ed, fh)" in source
     assert "return None" in source
+
+
+def test_recognize_uses_shared_geometry_normalizer():
+    source = ROBOT_SOURCE.read_text(encoding="utf-8")
+    tree = ast.parse(source)
+
+    imports_helper = any(
+        isinstance(node, ast.ImportFrom)
+        and node.module == "geometry_utils"
+        and any(alias.name == "normalize_geometry" for alias in node.names)
+        for node in tree.body
+    )
+
+    recognize = next(
+        node
+        for node in tree.body
+        if isinstance(node, ast.FunctionDef) and node.name == "recognize"
+    )
+
+    calls_helper = any(
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "normalize_geometry"
+        for node in ast.walk(recognize)
+    )
+
+    assert imports_helper
+    assert calls_helper
