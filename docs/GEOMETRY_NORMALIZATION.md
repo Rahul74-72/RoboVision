@@ -4,21 +4,18 @@ RoboVision combines FaceNet embeddings with normalized facial-geometry features 
 
 ## Current behavior
 
-The runtime currently standardizes geometry with the stored `geometry_mean` and `geometry_std` values before comparing it with the geometry prototypes.
+The runtime uses `geometry_utils.normalize_geometry()` as the shared normalization boundary before comparing geometry with the stored prototypes.
 
-A training set can contain a geometry feature with zero variance. In that case its standard deviation is `0`, and direct division by that value can produce `NaN` or infinite values during recognition. Those invalid values can contaminate the geometry score and, in turn, the combined recognition score.
+A training set can contain a geometry feature with zero variance. The shared helper protects this case by skipping standard-deviation entries whose magnitude is at or below the numerical tolerance instead of dividing by zero.
 
-## Expected behavior
+## Input contract
 
-A zero-variance geometry dimension should not contribute to the normalized geometry signal. The normalization should therefore:
+The helper requires `geometry`, `mean`, and `std` to have identical shapes and to contain finite values. Invalid shapes or non-finite values raise a clear `ValueError` instead of allowing malformed data to enter recognition scoring.
 
-1. Calculate `geometry - geometry_mean`.
-2. Divide only where the corresponding standard deviation is greater than a small numerical tolerance.
-3. Set zero-variance dimensions to `0` rather than allowing division by zero.
-4. Continue using the embedding score normally when geometry normalization is unavailable or invalid.
+## Output behavior
 
-## Regression test target
+Valid dimensions are z-score normalized and then L2-normalized. Zero or near-zero variance dimensions contribute `0`. If no dimensions can be normalized, the helper returns a zero vector rather than `NaN` or infinity.
 
-The recognition test suite should include a case where at least one `geometry_std` entry is zero and verify that recognition produces finite scores and does not emit `NaN` or infinity.
+## Regression coverage
 
-This document records the failure mode so the runtime fix and its regression test can be implemented together without changing the intended embedding/geometry weighting model.
+The lightweight geometry tests cover zero and near-zero standard deviation, all-invalid variance, shape mismatches, and non-finite inputs. The production recognition tests also verify that `3_robot.py` calls this shared helper.
