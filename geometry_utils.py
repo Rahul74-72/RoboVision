@@ -7,6 +7,9 @@ def normalize_geometry(geometry, mean, std):
     mean = np.asarray(mean, dtype=np.float32)
     std = np.asarray(std, dtype=np.float32)
 
+    if geometry.ndim != 1 or mean.ndim != 1 or std.ndim != 1:
+        raise ValueError("geometry, mean, and std must be 1-D vectors")
+
     if geometry.shape != mean.shape or geometry.shape != std.shape:
         raise ValueError("geometry, mean, and std must have the same shape")
 
