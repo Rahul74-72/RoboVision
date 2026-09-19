@@ -84,3 +84,33 @@ def test_recognize_uses_shared_geometry_normalizer():
 
     assert imports_helper
     assert calls_helper
+
+
+def test_queue_track_greeting_marks_track_greeted_only_after_queue_success():
+    functions = load_functions()
+    source = ast.unparse(functions["queue_track_greeting"])
+
+    queue_call = next(
+        node
+        for node in ast.walk(functions["queue_track_greeting"])
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and node.func.attr == "put_nowait"
+    )
+    greeted_assignment = next(
+        node
+        for node in ast.walk(functions["queue_track_greeting"])
+        if isinstance(node, ast.Assign)
+        and any(
+            isinstance(target, ast.Subscript)
+            and isinstance(target.slice, ast.Constant)
+            and target.slice.value == "greeted"
+            for target in node.targets
+        )
+    )
+
+    assert "Queue full" in source
+    assert isinstance(queue_call.func.value, ast.Name)
+    assert queue_call.func.value.id == "tts_queue"
+    assert greeted_assignment.value.value is True
+    assert greeted_assignment.lineno > queue_call.lineno
