@@ -63,3 +63,20 @@ def test_normalize_geometry_rejects_multidimensional_vectors():
             np.array([1.0, 3.0], dtype=np.float32),
             np.array([1.0, 2.0], dtype=np.float32),
         )
+
+
+def test_normalize_geometry_rejects_multidimensional_mean_and_std():
+    geometry = np.array([2.0, 4.0], dtype=np.float32)
+    with pytest.raises(ValueError, match="1-D vectors"):
+        normalize_geometry(
+            geometry,
+            np.array([[1.0, 3.0]], dtype=np.float32),
+            np.array([1.0, 2.0], dtype=np.float32),
+        )
+
+    with pytest.raises(ValueError, match="1-D vectors"):
+        normalize_geometry(
+            geometry,
+            np.array([1.0, 3.0], dtype=np.float32),
+            np.array([[1.0, 2.0]], dtype=np.float32),
+        )
