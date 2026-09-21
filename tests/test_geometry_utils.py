@@ -56,6 +56,15 @@ def test_normalize_geometry_rejects_non_finite_values():
         )
 
 
+def test_normalize_geometry_rejects_negative_standard_deviation():
+    with pytest.raises(ValueError, match="non-negative"):
+        normalize_geometry(
+            np.array([2.0, 4.0], dtype=np.float32),
+            np.array([1.0, 3.0], dtype=np.float32),
+            np.array([1.0, -2.0], dtype=np.float32),
+        )
+
+
 def test_normalize_geometry_rejects_multidimensional_vectors():
     with pytest.raises(ValueError, match="1-D vectors"):
         normalize_geometry(
