@@ -20,7 +20,10 @@ def normalize_geometry(geometry, mean, std):
     ):
         raise ValueError("geometry, mean, and std must contain finite values")
 
-    valid_std = np.abs(std) > 1e-6
+    if (std < 0).any():
+        raise ValueError("std must contain non-negative values")
+
+    valid_std = std > 1e-6
     z = np.zeros_like(geometry, dtype=np.float32)
     np.divide(
         geometry - mean,
