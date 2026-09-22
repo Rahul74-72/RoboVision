@@ -56,6 +56,22 @@ def test_normalize_geometry_rejects_non_finite_values():
         )
 
 
+def test_normalize_geometry_rejects_non_finite_mean_and_std():
+    geometry = np.array([2.0, 4.0], dtype=np.float32)
+    mean = np.array([1.0, np.nan], dtype=np.float32)
+    std = np.array([1.0, 2.0], dtype=np.float32)
+
+    with pytest.raises(ValueError, match="finite"):
+        normalize_geometry(geometry, mean, std)
+
+    with pytest.raises(ValueError, match="finite"):
+        normalize_geometry(
+            geometry,
+            np.array([1.0, 3.0], dtype=np.float32),
+            np.array([1.0, np.inf], dtype=np.float32),
+        )
+
+
 def test_normalize_geometry_rejects_negative_standard_deviation():
     with pytest.raises(ValueError, match="non-negative"):
         normalize_geometry(
