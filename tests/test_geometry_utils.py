@@ -105,3 +105,14 @@ def test_normalize_geometry_rejects_multidimensional_mean_and_std():
             np.array([1.0, 3.0], dtype=np.float32),
             np.array([[1.0, 2.0]], dtype=np.float32),
         )
+
+
+def test_normalize_geometry_stays_zero_when_all_variances_are_invalid():
+    result = normalize_geometry(
+        np.array([5.0, -3.0, 2.0], dtype=np.float32),
+        np.array([1.0, -1.0, 0.0], dtype=np.float32),
+        np.zeros(3, dtype=np.float32),
+    )
+
+    assert np.array_equal(result, np.zeros(3, dtype=np.float32))
+    assert np.isfinite(result).all()
