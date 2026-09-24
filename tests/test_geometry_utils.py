@@ -116,3 +116,13 @@ def test_normalize_geometry_stays_zero_when_all_variances_are_invalid():
 
     assert np.array_equal(result, np.zeros(3, dtype=np.float32))
     assert np.isfinite(result).all()
+
+
+def test_normalize_geometry_preserves_expected_direction():
+    result = normalize_geometry(
+        np.array([3.0, 2.0], dtype=np.float32),
+        np.array([1.0, 1.0], dtype=np.float32),
+        np.array([2.0, 1.0], dtype=np.float32),
+    )
+
+    assert np.allclose(result, np.array([1.0, 1.0], dtype=np.float32) / np.sqrt(2.0))
