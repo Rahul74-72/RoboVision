@@ -126,3 +126,14 @@ def test_normalize_geometry_preserves_expected_direction():
     )
 
     assert np.allclose(result, np.array([1.0, 1.0], dtype=np.float32) / np.sqrt(2.0))
+
+
+def test_normalize_geometry_returns_zero_when_geometry_matches_mean():
+    result = normalize_geometry(
+        np.array([1.0, 2.0, 3.0], dtype=np.float32),
+        np.array([1.0, 2.0, 3.0], dtype=np.float32),
+        np.array([1.0, 1.0, 1.0], dtype=np.float32),
+    )
+
+    assert np.array_equal(result, np.zeros(3, dtype=np.float32))
+    assert np.isfinite(result).all()
