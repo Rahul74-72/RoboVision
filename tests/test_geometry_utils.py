@@ -137,3 +137,15 @@ def test_normalize_geometry_returns_zero_when_geometry_matches_mean():
 
     assert np.array_equal(result, np.zeros(3, dtype=np.float32))
     assert np.isfinite(result).all()
+
+
+
+def test_normalize_geometry_returns_float32_output():
+    result = normalize_geometry(
+        np.array([3.0, 2.0], dtype=np.float64),
+        np.array([1.0, 1.0], dtype=np.float64),
+        np.array([2.0, 1.0], dtype=np.float64),
+    )
+
+    assert result.dtype == np.float32
+    assert np.isfinite(result).all()
