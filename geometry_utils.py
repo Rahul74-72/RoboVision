@@ -24,13 +24,17 @@ def normalize_geometry(geometry, mean, std):
         raise ValueError("std must contain non-negative values")
 
     valid_std = std > 1e-6
-    z = np.zeros_like(geometry, dtype=np.float32)
+    # Widen before subtraction and norm calculation to avoid float32 overflow.
+    geometry64 = geometry.astype(np.float64)
+    mean64 = mean.astype(np.float64)
+    std64 = std.astype(np.float64)
+    z = np.zeros_like(geometry64)
     np.divide(
-        geometry - mean,
-        std,
+        geometry64 - mean64,
+        std64,
         out=z,
         where=valid_std,
     )
 
     norm = np.linalg.norm(z)
-    return z / norm if norm > 1e-8 else z
+    return (z / norm if norm > 1e-8 else z).astype(np.float32)
