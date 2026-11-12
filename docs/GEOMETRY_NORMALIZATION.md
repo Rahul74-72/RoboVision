@@ -14,8 +14,10 @@ The helper requires `geometry`, `mean`, and `std` to be one-dimensional vectors 
 
 ## Output behavior
 
-Valid dimensions are z-score normalized and then L2-normalized. Zero or near-zero variance dimensions contribute `0`. If the normalized vector has a near-zero norm, the helper returns the zero vector rather than `NaN` or infinity. The returned vector uses `float32` dtype, including for zero-vector results.
+Dimensions with standard deviation above `1e-6` are z-score normalized; all other dimensions contribute `0`. Subtraction, division, and norm calculation use `float64` intermediates to prevent overflow for extreme finite `float32` inputs. The result is converted back to `float32`.
+
+If the z-score vector's L2 norm is greater than `1e-8`, it is scaled to unit length. At or below that threshold, the z-score vector is returned without L2 scaling: tiny nonzero values are preserved, while an exactly zero vector remains zero.
 
 ## Regression coverage
 
-The lightweight geometry tests cover zero and near-zero standard deviation, all-invalid variance, shape mismatches, non-finite inputs, and the `float32` output contract. The production recognition tests also verify that `3_robot.py` calls this shared helper.
+The lightweight geometry tests cover zero and near-zero standard deviation, all-invalid variance, shape mismatches, non-finite inputs, and the `float32` output contract. `tests/test_geometry_extreme_values.py` additionally covers extreme finite values, masked variance with extreme inputs, and preservation of tiny nonzero vectors. The production recognition tests also verify that `3_robot.py` calls this shared helper.
