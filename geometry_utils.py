@@ -2,7 +2,13 @@ import numpy as np
 
 
 def normalize_geometry(geometry, mean, std):
-    """Return an L2-normalized geometry vector with safe std handling."""
+    """Return float32 z-scores, scaled to unit L2 norm when above 1e-8.
+
+    Inputs must be equal-shaped finite 1-D vectors; std must be non-negative.
+    Dimensions with std <= 1e-6 contribute zero. Tiny z-score vectors retain
+    their values without L2 scaling. Arithmetic uses float64 intermediates
+    to avoid overflow for extreme finite float32 inputs. Inputs are not mutated.
+    """
     geometry = np.asarray(geometry, dtype=np.float32)
     mean = np.asarray(mean, dtype=np.float32)
     std = np.asarray(std, dtype=np.float32)
